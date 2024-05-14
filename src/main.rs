@@ -14,10 +14,9 @@ use tracing::*;
 mod api;
 
 #[derive(Parser)]
-#[command(version, about, long_about = None)]
+#[command(version, about, author = "freehelpdesk")]
 struct Cli {
     /// Directory of the IPA library
-    #[arg(short, long)]
     input: Vec<PathBuf>,
     /// Directory of the output metatdata
     #[arg(short, long)]
