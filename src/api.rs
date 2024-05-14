@@ -1,5 +1,3 @@
-use serde_json::Value;
-use std::error::Error;
 use thiserror::Error;
 
 use serde::{Deserialize, Serialize};
@@ -51,8 +49,7 @@ impl Api {
         let response = self.client.get(&url).send().await?;
         let json = response.json::<ApiResponse>().await?;
         let info = json
-            .results
-            .get(0)
+            .results.first()
             .cloned()
             .ok_or(ApiError::NoMatchesFound)?;
         Ok(info)

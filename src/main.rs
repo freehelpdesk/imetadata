@@ -1,6 +1,6 @@
 // Written by freehelpdesk
 
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
@@ -92,10 +92,9 @@ async fn main() {
                     }
                 }
             }
-        } else {
-        }
+        } 
 
-        let mut AppMetadata: Vec<Metadata> = vec![];
+        let mut app_metadata: Vec<Metadata> = vec![];
 
         for ipa in &ipas {
             let Ok(file_archive) = File::open(ipa) else {
@@ -146,15 +145,13 @@ async fn main() {
                         // far out, now we have to find all the fucking icons somehow lmao
                         if let Some(bundle_icons) = info.c_f_bundle_icon_files {
                             icons.append(&mut bundle_icons.clone());
-                        } else {
-                            if let Some(bundle_icons) = &info.c_f_bundle_icons {
-                                icons.append(
-                                    &mut bundle_icons
-                                        .c_f_bundle_primary_icon
-                                        .c_f_bundle_icon_files
-                                        .clone(),
-                                )
-                            }
+                        } else if let Some(bundle_icons) = &info.c_f_bundle_icons {
+                            icons.append(
+                                &mut bundle_icons
+                                    .c_f_bundle_primary_icon
+                                    .c_f_bundle_icon_files
+                                    .clone(),
+                            )
                         }
 
                         let mut modify = cli.output.clone();
@@ -181,7 +178,7 @@ async fn main() {
                         icon_file_list.sort();
                         icon_file_list.dedup();
 
-                        AppMetadata.push(Metadata {
+                        app_metadata.push(Metadata {
                             file_name: ipa.file_name().unwrap().to_string_lossy().to_string(),
                             identifier: info.c_f_bundle_identifier.clone(),
                             display_name: info.c_f_bundle_display_name,
@@ -193,9 +190,10 @@ async fn main() {
                 }
             }
         }
+
         let mut output = cli.output.clone();
         output.push("metadata.json");
 
-        fs::write(output, serde_json::to_string_pretty(&AppMetadata).unwrap()).unwrap();
+        fs::write(output, serde_json::to_string_pretty(&app_metadata).unwrap()).unwrap();
     }
 }
