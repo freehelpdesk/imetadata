@@ -163,7 +163,7 @@ async fn main() {
                             if let Some(name) = name {
                                 let name = name.file_name().unwrap().to_string_lossy().to_string();
                                 for icon in &icons {
-                                    if name.contains(icon) && name.ends_with(".png") {
+                                    if name.starts_with(icon) && name.ends_with(".png") {
                                         let mut buf = Vec::with_capacity(entry.size() as usize);
                                         entry.read_to_end(&mut buf).unwrap();
                                         let mut name_buf = modify.clone();
