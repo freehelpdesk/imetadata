@@ -11,4 +11,6 @@ serde = { version = "1.0.201", features = ["derive"] }
 serde_json = "1.0.117"
 thiserror = "1.0.60"
 tokio = { version = "1.37.0", features = ["full"] }
+tracing = { version = "0.1.40", features = ["log"] }
+tracing-subscriber = { version = "0.3.18", features = ["json", "tracing", "tracing-serde", "env-filter"] }
 zip = "1.2.3"
