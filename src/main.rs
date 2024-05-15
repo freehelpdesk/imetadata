@@ -34,7 +34,8 @@ struct Info {
     c_f_bundle_name: Option<String>,
     c_f_bundle_icon_files: Option<Vec<String>>,
     c_f_bundle_icons: Option<CFBundleIcons>,
-    c_f_bundle_short_version_string: String,
+    c_f_bundle_short_version_string: Option<String>,
+    c_f_bundle_version: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -139,7 +140,7 @@ async fn main() {
                             info.c_f_bundle_display_name.as_ref().unwrap_or(
                                 &info.c_f_bundle_name.clone().unwrap_or("N/A".to_string())
                             ),
-                            &info.c_f_bundle_short_version_string
+                            &info.c_f_bundle_short_version_string.unwrap_or(info.c_f_bundle_version.unwrap_or("N/A".to_string()))
                         );
 
                         let name = if let Ok(e) = api.lookup(&info.c_f_bundle_identifier).await {
