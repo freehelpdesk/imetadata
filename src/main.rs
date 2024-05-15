@@ -41,7 +41,7 @@ struct Info {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 struct CFBundleIcons {
-    c_f_bundle_primary_icon: CFBundlePrimaryIcon,
+    c_f_bundle_primary_icon: Option<CFBundlePrimaryIcon>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -164,12 +164,13 @@ async fn main() {
                         if let Some(bundle_icons) = info.c_f_bundle_icon_files {
                             icons.append(&mut bundle_icons.clone());
                         } else if let Some(bundle_icons) = &info.c_f_bundle_icons {
-                            icons.append(
-                                &mut bundle_icons
-                                    .c_f_bundle_primary_icon
-                                    .c_f_bundle_icon_files
-                                    .clone(),
-                            )
+                            if let Some(primary_icons) = &bundle_icons.c_f_bundle_primary_icon {
+                                icons.append(
+                                    &mut primary_icons
+                                        .c_f_bundle_icon_files
+                                        .clone(),
+                                )
+                            }
                         }
 
                         let mut modify = cli.output.clone();
