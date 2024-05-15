@@ -108,7 +108,7 @@ async fn main() {
 
         let cpus = num_cpus::get();
         let mut tasks = vec![];
-        for chunk in ipas.chunks(ipas.len() / cpus + 1) {
+        for chunk in ipas.chunks(ipas.len() / (cpus * 2) + 1) {
             let chunk = chunk.to_vec();
             let out = cli.output.clone();
             tasks.push(tokio::spawn(async move { process_ipas(chunk, &out).await }));
