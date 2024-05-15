@@ -182,7 +182,11 @@ async fn main() {
 
                         fs::create_dir_all(&modify).unwrap();
                         for j in 0..archive_dup.len() {
-                            let mut entry = archive_dup.by_index(j).unwrap();
+                            let Ok(mut entry) = archive_dup.by_index(j) else {
+                                error!("Failed to get entry idx: {j}");
+                                continue;
+                            };
+                            
                             let name = entry.enclosed_name();
                             if let Some(path) = name {
                                 let name = path.file_name().unwrap().to_string_lossy().to_string();
