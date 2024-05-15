@@ -1,6 +1,6 @@
 // Written by freehelpdesk
 
-use clap::Parser;
+use clap::{error, Parser};
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
@@ -120,7 +120,11 @@ async fn main() {
 
             for i in 0..archive.len() {
                 //find dat plist
-                let mut entry = archive.by_index(i).unwrap();
+                let Ok(mut entry) = archive.by_index(i) else {
+                    error!("Failed to get entry idx: {i}");
+                    continue;
+                };
+
                 let name = entry.enclosed_name();
 
                 if let Some(name) = name {
