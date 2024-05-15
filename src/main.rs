@@ -232,7 +232,10 @@ async fn process_ipas(path: Vec<PathBuf>, output: &PathBuf) -> Vec<Metadata> {
                         if name.starts_with(icon) && (extension.to_string_lossy() == "png") {
                             let mut buf =
                                 Vec::with_capacity(entry.entry().uncompressed_size() as usize);
-                            entry.read_to_end_checked(&mut buf).await.unwrap();
+                            if let Err(err) = entry.read_to_end_checked(&mut buf).await {
+                                error!("Failed to read entry: {}", err);
+                                continue;
+                            }
                             let mut name_buf = modify.clone();
                             name_buf.push(&name);
                             icon_file_list.push(name.to_string());
