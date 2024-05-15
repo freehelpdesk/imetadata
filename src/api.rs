@@ -31,6 +31,7 @@ pub struct ApiResponse {
 pub struct AppInfo {
     pub artist_id: u64,
     pub artist_name: String,
+    pub artwork_url_512: String,
 }
 
 impl Api {

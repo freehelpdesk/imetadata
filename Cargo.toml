@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+async_zip = { version = "0.0.17", features = ["full", "tokio"] }
 clap = { version = "4.5.4", features = ["derive"] }
+num_cpus = "1.16.0"
 plist = "1.6.1"
 reqwest = { version = "0.12.4", features = ["json"] }
 serde = { version = "1.0.201", features = ["derive"] }
