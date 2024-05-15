@@ -182,8 +182,11 @@ async fn main() {
                             if let Some(path) = name {
                                 let name = path.file_name().unwrap().to_string_lossy().to_string();
                                 for icon in &icons {
+                                    let Some(extension) = path.extension() else {
+                                        continue;
+                                    };
                                     if name.starts_with(icon)
-                                        && (path.extension().unwrap().to_string_lossy() == "png")
+                                        && (extension.to_string_lossy() == "png")
                                     {
                                         let mut buf = Vec::with_capacity(entry.size() as usize);
                                         entry.read_to_end(&mut buf).unwrap();
