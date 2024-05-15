@@ -8,8 +8,8 @@ use std::{
     io::Read,
     path::PathBuf,
 };
-use zip::ZipArchive;
 use tracing::*;
+use zip::ZipArchive;
 
 mod api;
 
@@ -97,7 +97,7 @@ async fn main() {
                     }
                 }
             }
-        } 
+        }
 
         let mut app_metadata: Vec<Metadata> = vec![];
 
@@ -109,12 +109,12 @@ async fn main() {
 
             let Ok(mut archive) = ZipArchive::new(&file_archive) else {
                 error!("is not an actual ipa lol");
-                return;
+                continue;
             };
 
             let Ok(mut archive_dup) = ZipArchive::new(&file_archive) else {
                 error!("is not an actual ipa lol");
-                return;
+                continue;
             };
 
             for i in 0..archive.len() {
@@ -133,13 +133,23 @@ async fn main() {
                         //println!("{}", std::str::from_utf8(&buf).unwrap());
                         let info: Info = plist::from_bytes(&buf).unwrap();
 
-                        info!("[{}] {} {}", &info.c_f_bundle_identifier, info.c_f_bundle_display_name.as_ref().unwrap_or(&info.c_f_bundle_name.clone().unwrap_or("N/A".to_string())), &info.c_f_bundle_short_version_string);
+                        info!(
+                            "[{}] {} {}",
+                            &info.c_f_bundle_identifier,
+                            info.c_f_bundle_display_name.as_ref().unwrap_or(
+                                &info.c_f_bundle_name.clone().unwrap_or("N/A".to_string())
+                            ),
+                            &info.c_f_bundle_short_version_string
+                        );
 
                         let name = if let Ok(e) = api.lookup(&info.c_f_bundle_identifier).await {
                             info!("Developer: {}", e.artist_name);
                             Some(e.artist_name)
                         } else {
-                            warn!("Appstore info not found for {}, not adding a developer.", &info.c_f_bundle_identifier);
+                            warn!(
+                                "Appstore info not found for {}, not adding a developer.",
+                                &info.c_f_bundle_identifier
+                            );
                             None
                         };
 
@@ -171,7 +181,9 @@ async fn main() {
                             if let Some(path) = name {
                                 let name = path.file_name().unwrap().to_string_lossy().to_string();
                                 for icon in &icons {
-                                    if name.starts_with(icon) && (path.extension().unwrap().to_string_lossy() == "png") {
+                                    if name.starts_with(icon)
+                                        && (path.extension().unwrap().to_string_lossy() == "png")
+                                    {
                                         let mut buf = Vec::with_capacity(entry.size() as usize);
                                         entry.read_to_end(&mut buf).unwrap();
                                         let mut name_buf = modify.clone();

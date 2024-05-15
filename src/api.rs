@@ -49,7 +49,8 @@ impl Api {
         let response = self.client.get(&url).send().await?;
         let json = response.json::<ApiResponse>().await?;
         let info = json
-            .results.first()
+            .results
+            .first()
             .cloned()
             .ok_or(ApiError::NoMatchesFound)?;
         Ok(info)
