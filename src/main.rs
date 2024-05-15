@@ -47,7 +47,7 @@ struct CFBundleIcons {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 struct CFBundlePrimaryIcon {
-    c_f_bundle_icon_files: Vec<String>,
+    c_f_bundle_icon_files: Option<Vec<String>>,
     c_f_bundle_icon_name: Option<String>,
 }
 
@@ -169,11 +169,12 @@ async fn main() {
                             icons.append(&mut bundle_icons.clone());
                         } else if let Some(bundle_icons) = &info.c_f_bundle_icons {
                             if let Some(primary_icons) = &bundle_icons.c_f_bundle_primary_icon {
-                                icons.append(
-                                    &mut primary_icons
-                                        .c_f_bundle_icon_files
-                                        .clone(),
-                                )
+                                if let Some(icon_files) = &primary_icons.c_f_bundle_icon_files {
+                                    icons.append(
+                                        &mut icon_files
+                                            .clone(),
+                                    )
+                                }
                             }
                         }
 
@@ -186,7 +187,7 @@ async fn main() {
                                 error!("Failed to get entry idx: {j}");
                                 continue;
                             };
-                            
+
                             let name = entry.enclosed_name();
                             if let Some(path) = name {
                                 let name = path.file_name().unwrap().to_string_lossy().to_string();
