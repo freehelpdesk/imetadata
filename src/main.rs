@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
     fs::{self, File},
-    io::Read,
+    io::{Cursor, Read},
     path::{Path, PathBuf},
 };
 use tokio::io::BufReader;
@@ -15,6 +15,7 @@ use tracing::*;
 use zip::ZipArchive;
 
 mod api;
+mod png;
 
 #[derive(Parser)]
 #[command(version, about, author = "freehelpdesk")]
@@ -27,6 +28,10 @@ struct Cli {
     /// Turn debugging information on
     #[arg(short, long, action = clap::ArgAction::Count)]
     debug: u8,
+
+    /// Fixup the CgBI PNGs
+    #[arg(short, long)]
+    cgbi: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -73,6 +78,8 @@ async fn main() {
 
     tracing_subscriber::fmt()
         .with_env_filter("imetadata=trace")
+        .with_line_number(true)
+        .with_file(true)
         .init();
 
     let mut ipas: Vec<PathBuf> = vec![];
@@ -111,7 +118,9 @@ async fn main() {
         for chunk in ipas.chunks(ipas.len() / cpus + 1) {
             let chunk = chunk.to_vec();
             let out = cli.output.clone();
-            tasks.push(tokio::spawn(async move { process_ipas(chunk, &out).await }));
+            tasks.push(tokio::spawn(async move {
+                process_ipas(chunk, &out, &cli.cgbi).await
+            }));
         }
 
         for task in tasks {
@@ -125,7 +134,7 @@ async fn main() {
     }
 }
 
-async fn process_ipas(path: Vec<PathBuf>, output: &PathBuf) -> Vec<Metadata> {
+async fn process_ipas(path: Vec<PathBuf>, output: &PathBuf, cgbi_fix: &bool) -> Vec<Metadata> {
     // Each task will have its own api instance
     let api = api::Api::new("us");
     let mut app_metadata: Vec<Metadata> = vec![];
@@ -236,6 +245,21 @@ async fn process_ipas(path: Vec<PathBuf>, output: &PathBuf) -> Vec<Metadata> {
                                 error!("Failed to read entry: {}", err);
                                 continue;
                             }
+
+                            // Here, we have to fix some of the pngs that are corrupted somehow.
+                            buf = if *cgbi_fix {
+                                buf = match png::fixup_png(Cursor::new(&buf)) {
+                                    Ok(buf) => buf,
+                                    Err(err) => {
+                                        warn!("Failed to fixup PNG: {}", err);
+                                        buf
+                                    }
+                                };
+                                buf
+                            } else {
+                                buf
+                            };
+
                             let mut name_buf = modify.clone();
                             name_buf.push(&name);
                             icon_file_list.push(name.to_string());
