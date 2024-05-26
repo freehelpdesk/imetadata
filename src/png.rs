@@ -1,15 +1,9 @@
-use flate2::read::ZlibDecoder;
-use inflate::{inflate_bytes, inflate_bytes_zlib};
-use png::{Decoder, Encoder};
-use std::{
-    fs::File,
-    io::{BufWriter, Cursor, Error, Read, Write},
-};
+use inflate::inflate_bytes;
+use std::io::{Error, Read, Write};
 use thiserror::*;
 use tracing::info;
 
 extern crate crc;
-use crc::{Crc, CRC_32_ISO_HDLC};
 
 #[derive(Error, Debug)]
 pub enum PngError {
@@ -19,16 +13,12 @@ pub enum PngError {
     NotCgBI,
     #[error("{0}")]
     IoError(#[from] Error),
-    #[error("{0}")]
-    PngDecodingError(#[from] png::DecodingError),
-    #[error("{0}")]
-    PngEncodingError(#[from] png::EncodingError),
 }
 
 /// idfk why some of the pngs are broken, but this should fix them. dont quote me on that.
 pub fn fixup_png<R: Read>(mut reader: R) -> Result<Vec<u8>, PngError> {
     let (info, data) = parse_ios_png(&mut reader)?;
-    let corrected_data = correct_pixel_data(data, info.0 as usize, info.1 as usize);
+    let corrected_data = correct_pixel_data(data);
 
     let data = build_png(info, &corrected_data)?;
 
@@ -120,26 +110,19 @@ fn decompress_idat_chunks(data: &[u8]) -> Result<Vec<u8>, std::io::Error> {
     }
 }
 
-fn correct_pixel_data(data: Vec<u8>, width: usize, height: usize) -> Vec<u8> {
-    let mut corrected_data = data.clone();
-
-    // for y in 0..height {
-    //     for x in 0..width {
-    //         let i = (y * width + x) * 4;
-    //         let b = data[i];
-    //         let g = data[i + 1];
-    //         let r = data[i + 2];
-    //         let a = data[i + 3];
-    //         corrected_data.push(r);
-    //         corrected_data.push(g);
-    //         corrected_data.push(b);
-    //         corrected_data.push(a);
-    //     }
-    // }
-
-    // unpremultiply_alpha(&mut corrected_data);
-
-    corrected_data
+fn correct_pixel_data(mut data: Vec<u8>) -> Vec<u8> {
+    let mut i = 0;
+    while i < data.len() {
+        if let Some(chunk) = data.get_mut(i..i + 3) {
+            let temp = chunk[0]; // Store B temporarily
+            chunk[0] = chunk[2]; // Assign R to B
+            chunk[2] = temp; // Assign temp (B) to R
+        } else {
+            break; // Ensure we don't go out of bounds
+        }
+        i += 3;
+    }
+    data
 }
 
 fn unpremultiply_alpha(data: &mut Vec<u8>) {
